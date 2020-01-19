@@ -5,7 +5,7 @@ import threading
 import upsidedown
 from heapq import heappush, heappop
 
-# created and merged by Tyar from various resources
+# created, reformatted and merged by Tyar from various resources
 # NOTE below is for dev
 # n = 5
 # start_x = 0
