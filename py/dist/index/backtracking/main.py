@@ -3,6 +3,39 @@ import time
 import itertools
 import threading
 import upsidedown
+from heapq import heappush, heappop
+
+# n = 5
+# start_x = 0
+# start_y = 0
+
+move_x = [2, 1, -1, -2, -2, -1, 1, 2]
+move_y = [1, 2, 2, 1, -1, -2, -2, -1]
+
+# input board size
+n = int(input("board size: "))
+
+# input x
+try:
+    start_x = int(input("start x : "))
+except ValueError:
+    print(" input only number")
+    start_x = int(input("start x : "))
+
+while start_x < 0 or start_x >= n:
+    print ("x diluar matriks papan! x harus diantara 0 {0}".format(n))
+    start_x = int(input("start x : "))
+
+# input y
+try:
+    start_y = int(input("start y : "))
+except ValueError:
+    print(" input only number")
+    start_y = int(input("start y : "))
+
+while start_y < 0 or start_y >= n:
+    print ("y diluar matriks papan! y harus diantara 0 {0}".format(n))
+    start_y = int(input("start y : "))
 
 # -- cek apakah x dan y masih didalam matriks
 def isInBoard(x, y, board, n):
@@ -27,21 +60,6 @@ def printSolution(board, n):
 def solveKT():
     count = 0
     steps = []
-
-    # input board size
-    n = int(input("board size: "))
-
-    # input x
-    start_x = int(input("x : "))
-    while start_x < 0 or start_x > n:
-        print ("x diluar matriks papan! x harus diantara 0 {0}".format(n))
-        start_x = int(input("x : "))
-
-    # input y
-    start_y = int(input("y : "))
-    while start_y < 0 or start_y > n:
-        print ("y diluar matriks papan! y harus diantara 0 {0}".format(n))
-        start_y = int(input("y : "))
 
     t = threading.Thread(target=animate)
     t.start()
@@ -111,6 +129,7 @@ def animate():
     for c in itertools.cycle(['..  ', ' : ', asa, ':  ']):
         if done:
             break
+        
         sys.stdout.write('\rLoading ' + c)
         sys.stdout.flush()
         time.sleep(0.05)
@@ -120,15 +139,82 @@ def animate():
 def flushLoading():
   return time.sleep(1), sys.stdout.flush()
 
+def resolveKTWD(start_x, start_y, n, board, move_x, move_y):
+
+    for k in range(n**2):
+            # print (k)
+        board[start_y][start_x] = k
+        pq = []  # priority queue of available neighbors
+
+        for i in range(8):  # mencari jalur
+            new_x = start_x + move_x[i]
+            new_y = start_y + move_y[i]
+
+            if isInBoard(new_y, new_x, board, n):
+                ctr = 0
+                for j in range(8):  # -- mencari derajat dari setiap jalur
+                    ex = new_x + move_x[j]
+                    ey = new_y + move_y[j]
+
+                    if isInBoard(ey, ex, board, n):
+                        ctr += 1
+
+                global countWD
+                countWD += 1
+
+                heappush(pq, (ctr, i))
+
+        # memindahkan jalur yang mempunyai derajat terkecil
+        if len(pq) > 0:
+            (p, m) = heappop(pq)
+
+            start_x += move_x[m]
+            start_y += move_y[m]
+
+        else:
+            break
+
+    for a in board:
+        if (-1 in a):
+            return False
+
+    return True
+
+
+def solveKTWD():
+    board = [[-1 for i in range(n)]for i in range(n)]
+
+    if (resolveKTWD(start_x, start_y, n, board, move_x, move_y)):
+        for cy in range(n):
+            for cx in range(n):
+                print(str(board[cy][cx]).zfill(2), end=' ')
+            print()
+    else:
+        print("Solution does not exist")
+
+
+
 # main function
 if __name__ == "__main__":
     done = False
     count = 0
-    start = time.process_time()
+    countWD = 0
     
-    solveKT()
-    end = time.process_time()
-    timeExec = end - start
+    print("\n")
+    startWD = time.perf_counter()
+    print ("1. Warnsdorff'rule ")
+    solveKTWD()
+    timeExecWD = time.perf_counter() - startWD
+    print ("---------------------")
+    print ("{0} attempts in {1} seconds".format(countWD, timeExecWD))
 
-    print ("1. Backtracking")
-    print ("{0} attempts ends in {1} seconds".format(count, timeExec))
+    print ("---------------------\n")
+
+    start = time.perf_counter()
+    print ("2. Backtracking")
+    solveKT()
+    print ("---------------------")
+    timeExec = time.perf_counter() - start
+    print ("{0} attempts in {1} seconds".format(count, timeExec))
+
+    k=input("press enter to exit") 
